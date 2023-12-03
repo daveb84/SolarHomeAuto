@@ -1,0 +1,127 @@
+﻿@using SolarHomeAuto.Domain;
+@using SolarHomeAuto.Domain.Devices.History;
+@using SolarHomeAuto.Domain.Devices.Models;
+@using SolarHomeAuto.Domain.Devices.Types;
+@using SolarHomeAuto.UI.Models;
+
+@inject IDevicePageService Service
+
+@if (IsLoading)
+{
+    <PageLoading />
+}
+else
+{
+    <PageTopTitle Title=@PageTitle></PageTopTitle>
+
+    <Switch Checked=@StateChangesOnly OnChange="StateChangesOnlyToggle" Label="Include state changes only" />
+
+    @if (!History.Any())
+    {
+        <p class="text-center">There is no history for this device.</p>
+    }
+    else
+    {
+        <Pager OnPage="FetchPage" State="Pager" RecordsDisplayName="records"></Pager>
+
+        @foreach (var message in History)
+        {
+            <table class="table table-fixed history-table">
+                <tbody>
+                    <tr class="table-active">
+                        <th>Date</th>
+                        <td>@message.Date.UtcToLocalLong()</td>
+                    </tr>
+                    <tr>
+                        <th>Action</th>
+                        <td>@message.State.Action</td>
+                    </tr>
+                    <tr>
+                        <th>State after action</th>
+                        <td>@message.State.Status</td>
+                    </tr>
+                    @if (message.State.Power.HasValue)
+                    {
+                        <tr>
+                            <th>Power (Watts)</th>
+                            <td>@message.State.Power</td>
+                        </tr>
+                    }
+                    <tr>
+                        <th>Event source</th>
+                        <td>@message.Source</td>
+                    </tr>
+                    @if (!string.IsNullOrWhiteSpace(message.Error))
+                    {
+                        <tr>
+                            <th>Error</th>
+                            <td>@message.Error</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        <Pager OnPage="FetchPage" State="Pager" RecordsDisplayName="records"></Pager>
+    }   
+}
+
+
+@code {
+
+    [Parameter]
+    public string DeviceId { get; set; }
+
+    private bool IsLoading { get; set; }
+
+    public string PageTitle => $"{Device.Name} - History";
+
+    private Device Device { get; set; }
+
+    public List<DeviceHistory<SwitchHistoryState>> History { get; set; } = new List<DeviceHistory<SwitchHistoryState>>();
+
+    private PagerState Pager { get; set; } = new PagerState();
+
+    private bool StateChangesOnly { get; set; } = true;
+
+    private async Task StateChangesOnlyToggle(bool selected)
+    {
+        StateChangesOnly = selected;
+
+        await Refresh();
+    }
+
+    private async Task FetchPage(PagerFetchParams fetch)
+    {
+        if (!string.IsNullOrWhiteSpace(DeviceId))
+        {
+            var filter = new DeviceHistoryFilter
+            {
+                NewestFirst = true,
+                Skip = fetch.Skip,
+                Take = fetch.Take,
+                StateChangesOnly = StateChangesOnly
+            };
+
+            History = await Service.GetDeviceHistory(DeviceId, filter);
+
+            Pager.Update(fetch, History.Count);
+        }
+    }
+
+    private Task Refresh()
+    {
+        return FetchPage(new PagerFetchParams());
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsLoading = true;
+
+        Device = (await Service.GetDevices()).FirstOrDefault(x => x.DeviceId == DeviceId);
+
+        await Refresh();
+
+        IsLoading = false;
+    }
+}

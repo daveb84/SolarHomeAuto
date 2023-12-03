@@ -1,0 +1,85 @@
+﻿@using System.ComponentModel.DataAnnotations;
+@using Newtonsoft.Json;
+@using SolarHomeAuto.Domain.Account.Models;
+@using SolarHomeAuto.Domain.ServerApi.Models;
+@inject IAccountPageService Service
+@inject NavigationManager NavigationManager
+
+<EditForm Model="@model" OnValidSubmit="HandleSubmit">
+    <CustomValidation @ref="customValidation" />
+    <DataAnnotationsValidator />
+    <JsonField Label="Devices" @bind-Value="model.Devices" ValidationFor="@(() => model.Devices)" Id="Devices" />
+    <ProcessButton ButtonLabel="Save" @ref="submitButton" OnFormSubmit="Submit" />
+</EditForm>
+
+@code
+{
+    private AccountModel model = new AccountModel();
+
+    private List<AccountDevice> devices;
+
+    private ProcessButton submitButton;
+
+    private CustomValidation customValidation;
+    private EditContext editContext;
+
+    private async Task HandleSubmit()
+    {
+        customValidation?.ClearErrors();
+
+        if (editContext.Validate())
+        {
+            var errors = new Dictionary<string, List<string>>();
+
+            if (!TrySerialize<List<AccountDevice>>(model.Devices, out devices))
+            {
+                errors.Add(nameof(model.Devices), new() { "Invalid format" });
+            }
+
+            if (errors.Any())
+            {
+                customValidation.DisplayErrors(errors);
+            }
+            else
+            {
+                await submitButton.RunSubmitForm();
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        editContext = new EditContext(model);
+
+        var devices = await Service.GetDevices();
+
+        model = new AccountModel
+        {
+            Devices = JsonConvert.SerializeObject(devices, Formatting.Indented)
+        };
+    }
+
+    private async Task Submit()
+    {
+        await Service.SaveDevices(devices);
+    }
+
+    private bool TrySerialize<T>(string json, out T data)
+    {
+        try
+        {
+            data = JsonConvert.DeserializeObject<T>(json);
+            return true;
+        }
+        catch
+        {
+            data = default;
+            return false;
+        }
+    }
+
+    class AccountModel
+    {
+        public string Devices { get; set; }
+    }
+}

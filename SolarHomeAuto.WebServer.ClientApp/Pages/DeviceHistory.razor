@@ -1,0 +1,9 @@
+﻿@page "/devicehistory/{deviceId}"
+
+<DeviceHistoryPage DeviceId=@DeviceId />
+
+@code
+{
+    [Parameter]
+    public string DeviceId { get; set; }
+}

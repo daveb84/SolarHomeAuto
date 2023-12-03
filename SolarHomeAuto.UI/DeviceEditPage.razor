@@ -1,0 +1,119 @@
+﻿@using SolarHomeAuto.Domain;
+@using SolarHomeAuto.Domain.Account.Models;
+@using SolarHomeAuto.Domain.Devices.History;
+@using SolarHomeAuto.Domain.Devices.Models;
+@using SolarHomeAuto.Domain.Devices.Types;
+@using SolarHomeAuto.UI.Models;
+@using System.ComponentModel.DataAnnotations;
+
+@inject IAccountPageService Service
+
+@if (IsLoading)
+{
+    <PageLoading />
+}
+else if (NotFound)
+{
+    <PageTopTitle Title="Device not found"></PageTopTitle>
+    <p>Device with ID @DeviceId cannot be found</p>
+}
+else
+{
+    <PageTopTitle Title=@PageTitle></PageTopTitle>
+
+    <EditForm Model="@model" OnValidSubmit="HandleSubmit">
+        <CustomValidation @ref="customValidation" />
+        <ObjectGraphDataAnnotationsValidator />
+
+        <div class="device-fields">
+            <TextField Label="Device ID" @bind-Value="model.DeviceId" ValidationFor="@(() => model.DeviceId)" Id="DeviceId" />
+            <TextField Label="Display name" @bind-Value="model.Name" ValidationFor="@(() => model.Name)" Id="Name" />
+        </div>
+
+        @foreach (var schedule in model.Schedules)
+        {
+            <DeviceEditSchedule Model="schedule" />
+        }
+
+        <div class="schedule-buttons">
+            <button class="btn btn-secondary" @onclick="model.AddSchedule">Add new schedule</button>
+            <button class="btn btn-secondary" @onclick="model.SortSchedules">Sort schedules</button>
+        </div>
+
+        <ProcessButton ButtonLabel="Save" @ref="submitButton" OnFormSubmit="Submit" />
+    </EditForm>
+}
+
+@code {
+
+    [Parameter]
+    public string DeviceId { get; set; }
+
+    private DeviceEditModel model = new DeviceEditModel();
+
+    private bool IsLoading { get; set; }
+    private bool NotFound { get; set; }
+
+    public string PageTitle => $"Edit {model.Name}";
+
+    private ProcessButton submitButton;
+
+    private CustomValidation customValidation;
+    private EditContext editContext;
+
+    private async Task HandleSubmit()
+    {
+        customValidation?.ClearErrors();
+
+        if (editContext.Validate())
+        {
+            var errors = new Dictionary<string, List<string>>();
+
+            if (errors.Any())
+            {
+                customValidation.DisplayErrors(errors);
+            }
+            else
+            {
+                await submitButton.RunSubmitForm();
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        editContext = new EditContext(model);
+
+        model.SchedulesChanged += OnSchedulesChanged;
+
+        var device = await Service.GetDevice(DeviceId);
+
+        if (device == null)
+        {
+            NotFound = true;
+            return;
+        }
+
+        model.CopyFrom(device);
+    }
+
+    private void OnSchedulesChanged(object sender, EventArgs e)
+    {
+        this.StateHasChanged();
+    }
+
+    private async Task Submit()
+    {
+        var device = await Service.GetDevice(DeviceId);
+
+        if (device == null)
+        {
+            NotFound = true;
+            return;
+        }
+
+        model.CopyTo(device);
+
+        await Service.SaveDevice(DeviceId, device);
+    }
+}

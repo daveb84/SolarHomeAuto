@@ -1,0 +1,110 @@
+﻿@using SolarHomeAuto.Domain;
+@using SolarHomeAuto.Domain.DataStore.Filtering;
+@using SolarHomeAuto.Domain.Devices.Models;
+@using SolarHomeAuto.Domain.Devices.History;
+@using SolarHomeAuto.Domain.Devices.Types;
+@using SolarHomeAuto.Domain.Logging
+@using SolarHomeAuto.Domain.Logging.Models
+@using SolarHomeAuto.Domain.SolarUsage.Models;
+@using SolarHomeAuto.UI.Models;
+
+@inject ISolarPageService Service
+
+@if (IsLoading)
+{
+    <PageLoading />
+}
+else if (!History.Any())
+{
+    <div>
+        <PageTopTitle Title="Solar history"></PageTopTitle>
+
+        <p class="text-center">There is no solar history to display.</p>
+    </div>
+}
+else
+{
+    <PageTopTitle Title="Solar history"></PageTopTitle>
+
+    <Pager OnPage="FetchPage" State="Pager" RecordsDisplayName="records"></Pager>
+
+    @foreach (var message in History)
+    {
+        <table class="table table-fixed">
+            <tbody>
+                <tr class="table-active">
+                    <th>Date</th>
+                    <td>@message.Date.UtcToLocalLong()</td>
+                </tr>
+                <tr>
+                    <th>Production</th>
+                    <td>@message.Production</td>
+                </tr>
+                <tr>
+                    <th>Comsumption</th>
+                    <td>@message.Consumption</td>
+                </tr>
+                <tr>
+                    <th>Grid feed in</th>
+                    <td>@message.GetGridPower(GridPowerType.FeedIn, true)</td>
+                </tr>
+                <tr>
+                    <th>Grid purchase</th>
+                    <td>@message.GetGridPower(GridPowerType.Purchase, true)</td>
+                </tr>
+                <tr>
+                    <th>Battery charging</th>
+                    <td>@message.GetBatteryPower(BatteryPowerType.Charging, true)</td>
+                </tr>
+                <tr>
+                    <th>Battery discharging</th>
+                    <td>@message.GetBatteryPower(BatteryPowerType.Discharging, true)</td>
+                </tr>
+                <tr>
+                    <th>Battery capacity</th>
+                    <td>@message.BatteryCapacity</td>
+                </tr>
+            </tbody>
+        </table>
+    }
+
+    <Pager OnPage="FetchPage" State="Pager" RecordsDisplayName="records"></Pager>
+}
+
+
+@code {
+
+    private bool IsLoading { get; set; }
+
+    public List<SolarRealTime> History { get; set; } = new List<SolarRealTime>();
+
+    private PagerState Pager { get; set; } = new PagerState();
+
+    private async Task FetchPage(PagerFetchParams fetch)
+    {
+        var filter = new PagingFilter
+            {
+                NewestFirst = true,
+                Skip = fetch.Skip,
+                Take = fetch.Take
+            };
+
+        History = await Service.GetSolarRealTime(filter);
+
+        Pager.Update(fetch, History.Count);
+    }
+
+    private Task Refresh()
+    {
+        return FetchPage(new PagerFetchParams());
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsLoading = true;
+
+        await Refresh();
+
+        IsLoading = false;
+    }
+}

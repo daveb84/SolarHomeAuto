@@ -1,0 +1,70 @@
+﻿@using SolarHomeAuto.Domain.Messaging;
+@inject SolarHomeAuto.Domain.Messaging.TestMessageService service
+
+<h1>Test MQTT</h1>
+<p>
+    <button class="btn btn-primary" @onclick="Refresh">Refresh</button>
+    <button class="btn btn-secondary" @onclick="PublishMessage">Publish Message</button>
+
+    <h3>Sent</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Message</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var message in Sent)
+            {
+                <tr>
+                    <td>@message.Time.ToString("ddd d MMM yyyy HH:mm:ss")</td>
+                    <td>@message.Message</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h2>Received</h2>
+    <table class="table">
+        <tr>
+            <th>Time</th>
+            <th>Message</th>
+        </tr>
+        @foreach (var message in Received)
+        {
+            <tr>
+                <td>@message.Time.ToString("ddd d MMM yyyy HH:mm:ss")</td>
+                <td>@message.Message</td>
+            </tr>
+        }
+    </table>
+</p>
+
+@code {
+
+    public List<TestMessageService.TestMessage> Sent { get; set; }
+    public List<TestMessageService.TestMessage> Received { get; set; }
+
+    private void Refresh()
+    {
+        Sent = service.GetSentMessages().ToList();
+        Received = service.GetReceivedMessages().ToList();
+    }
+
+    private async Task PublishMessage()
+    {
+        var message = $"Sending Mobile App Message {DateTime.Now:s}";
+
+        await service.Send(message);
+
+        Refresh();
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        Refresh();
+
+        return Task.CompletedTask;
+    }
+}

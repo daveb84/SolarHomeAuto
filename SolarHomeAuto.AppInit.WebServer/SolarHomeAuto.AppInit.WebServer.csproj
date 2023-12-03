@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SolarHomeAuto.UI.Services.Default\SolarHomeAuto.UI.Services.Default.csproj" />
+    <ProjectReference Include="..\SolarHomeAuto.UI.Services\SolarHomeAuto.UI.Services.csproj" />
+    <ProjectReference Include="..\SolarHomeAuto.Domain\SolarHomeAuto.Domain.csproj" />
+    <ProjectReference Include="..\SolarHomeAuto.Infrastructure.Auth\SolarHomeAuto.Infrastructure.Auth.csproj" />
+    <ProjectReference Include="..\SolarHomeAuto.Infrastructure.DataStore.SqlServer\SolarHomeAuto.Infrastructure.DataStore.SqlServer.csproj" />
+    <ProjectReference Include="..\SolarHomeAuto.Infrastructure.DataStore\SolarHomeAuto.Infrastructure.DataStore.csproj" />
+    <ProjectReference Include="..\SolarHomeAuto.Infrastructure.Mqtt\SolarHomeAuto.Infrastructure.Mqtt.csproj" />
+    <ProjectReference Include="..\SolarHomeAuto.Infrastructure.Shelly\SolarHomeAuto.Infrastructure.Shelly.csproj" />
+    <ProjectReference Include="..\SolarHomeAuto.Infrastructure.Solar\SolarHomeAuto.Infrastructure.Solar.csproj" />
+  </ItemGroup>
+
+</Project>

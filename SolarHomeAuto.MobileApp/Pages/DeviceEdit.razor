@@ -1,0 +1,9 @@
+﻿@page "/deviceedit/{deviceId}"
+
+<DeviceEditPage DeviceId=@DeviceId />
+
+@code
+{
+    [Parameter]
+    public string DeviceId { get; set; }
+}

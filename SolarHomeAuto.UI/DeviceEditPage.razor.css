@@ -1,0 +1,17 @@
+.device-fields {
+    display: flex;
+    justify-content: flex-start;
+    column-gap: 50px;
+    flex-wrap:wrap;
+}
+
+    .device-fields > ::deep .form-field {
+        flex:0 1 300px;
+    }
+
+    .schedule-buttons {
+        padding:10px 0;
+        display:flex;
+        justify-content:flex-end;
+        column-gap: 10px;
+    }

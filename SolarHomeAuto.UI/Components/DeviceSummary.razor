@@ -1,0 +1,46 @@
+﻿@using SolarHomeAuto.Domain.Devices.Models
+@using SolarHomeAuto.Domain.Devices;
+@using SolarHomeAuto.Domain.Devices.Types;
+@using SolarHomeAuto.Domain.MobileApp
+@using SolarHomeAuto.Domain;
+@inject IDevicePageService DeviceService
+
+@if (!IsLoading)
+{
+    <div class="section">
+        <div class="title">
+            <h2>Devices</h2>
+        </div>
+        @foreach (var device in DeviceConfigs)
+        {
+            <DevicePanel Device="@device" ParentCollection="@DevicePanels" />
+        }
+    </div>
+}
+
+@code {
+
+    private bool IsLoading { get; set; }
+
+    private List<DevicePanel> DevicePanels = new List<DevicePanel>();
+
+    private List<Device> DeviceConfigs { get; set; } = new List<Device>();
+
+    public async Task RefreshDevices()
+    {
+        var tasks = DevicePanels.Select(x => x.Refresh()).ToList();
+
+        await Task.WhenAll(tasks);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsLoading = true;
+
+        DeviceConfigs = (await DeviceService.GetDevices() ?? new List<Device>())
+            .OrderBy(x => x.Name)
+            .ToList();
+
+        IsLoading = false;
+    }
+}

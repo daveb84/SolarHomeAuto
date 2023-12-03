@@ -1,0 +1,108 @@
+﻿@using SolarHomeAuto.Domain.Devices.Models
+@using SolarHomeAuto.Domain.Devices;
+@using SolarHomeAuto.Domain.Devices.Types;
+@using SolarHomeAuto.Domain.MobileApp
+@using SolarHomeAuto.Domain;
+@using SolarHomeAuto.Domain.Monitoring;
+@inject IMonitoringPageService Service
+@inject IDevicePageService DeviceService
+
+<PageTopTitle Title="Solar Home Auto" ShowBack=false Refresh="() => RefreshPage(true)"></PageTopTitle>
+
+<div class="section">
+    <div class="title">
+        <h2></h2>
+        <div class="links">
+            <a href="/solar">History</a>
+            <a href="/logs">Logs</a>
+            <a href="/commands">Commands</a>
+            <a href="/system">System</a>
+        </div>
+    </div>
+
+    @if (HasMobileAppService)
+    {
+        <Switch Checked=@MobileAppServiceIsRunning OnChange="MobileAppServiceToggle" Label=@MobileAppServiceLabel />
+
+        @if (MobileAppServiceIsRunning)
+        {
+            <Switch Checked=@WorkerIsRunning OnChange="WorkerServiceToggle" Label=@WorkerServiceLabel />
+        }
+    }
+    else
+    {
+        <Switch Checked=@WorkerIsRunning OnChange="WorkerServiceToggle" Label=@WorkerServiceLabel />
+    }
+
+</div>
+
+<DeviceSummary @ref=devicesSummary />
+
+@code {
+    private DeviceSummary devicesSummary;
+
+    private static bool firstLoad = true;
+
+    public bool HasMobileAppService { get; set; }
+
+    private MobileAppServiceStatus MobileAppServiceStatus { get; set; }
+    private MonitoringWorkerStatus WorkerStatus { get; set; }
+
+    private bool MobileAppServiceIsRunning => MobileAppServiceStatus == MobileAppServiceStatus.Started;
+    private bool WorkerIsRunning => WorkerStatus == MonitoringWorkerStatus.Started;
+
+    private string MobileAppServiceLabel
+    {
+        get
+        {
+            return MobileAppServiceIsRunning
+                ? "Service is running and can be controlled by remote connections" 
+                : "Monitoring service is not running";
+        }
+    }
+
+    private string WorkerServiceLabel
+    {
+        get
+        {
+            return $"Solar monitoring is {WorkerStatus.ToString().ToLower()}";
+        }
+    }
+
+    private async Task MobileAppServiceToggle(bool start)
+    {
+        MobileAppServiceStatus = await Service.ToggleMobileAppServiceStatus(start);
+    }
+
+    private async Task WorkerServiceToggle(bool start)
+    {
+        WorkerStatus = await Service.ToggleWorkerService(start);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshPage(false);
+    }
+
+    private async Task RefreshPage(bool refreshDevices = true)
+    {
+        if (firstLoad)
+        {
+            firstLoad = false;
+            await Service.AppInit();
+        }
+
+        if (await Service.IsMobileMonitoringHost())
+        {
+            HasMobileAppService = true;
+            MobileAppServiceStatus = await Service.GetMobileAppServiceStatus();
+        }
+
+        WorkerStatus = await Service.GetWorkerStatus();
+
+        if (refreshDevices)
+        {
+            await devicesSummary.RefreshDevices();
+        }
+    }
+}

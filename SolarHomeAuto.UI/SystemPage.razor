@@ -1,0 +1,74 @@
+@using SolarHomeAuto.Domain;
+@inject IDataPageService Service
+
+<PageTopTitle Title="System"></PageTopTitle>
+
+@if (Service.IsMobileApp)
+{
+    <div class="section">
+        <h2>Server connection</h2>
+        <p>Optional.  Set server details here.  When set, data can be automatically sent to the server when purged from the app.</p>
+        <ServerApiForm />
+    </div>
+
+    <div class="section">
+        <h2>Reset account from server</h2>
+        <p>This will reset all devices and account credentials with configuration from the server.</p>
+        <ProcessButton ButtonLabel="Reset" OnClick="RunResetAccount" />
+    </div>
+}
+
+<div class="section">
+    <h2>Monitoring service mode</h2>
+    <p>
+        Select <strong>Host</strong> to run the monitoring service within this application.  Alternatively, select <strong>Remote</strong> to use this 
+        application to control the monitoring service that is running on another device.
+    </p>
+    <MonitoringForm />
+</div>
+
+
+<div class="section">
+    <h2>Account credentials</h2>
+    <p>Credentials used to connect to external services such as Solar usage APIs, device cloud APIs</p>
+    <AccountCredentialsForm />
+</div>
+
+<div class="section">
+    <h2>Devices</h2>
+    <p>Devices that can be controlled by the Solar Home Auto, including schedules for automation.</p>
+    <AccountDevicesForm />
+</div>
+
+<div class="section">
+    <h2>Solar data import schedule</h2>
+    <p>Schedule for when solar data should be imported.  This can also be configured to delete data during the schedule.</p>
+    <AccountSolarScheduleForm />
+</div>
+
+<div class="section">
+    <h2>Purge data</h2>
+    @if (Service.IsMobileApp)
+    {
+        <p>This will delete device history, logs and solar usage data from this device. If configured, the data will be sent to the Server API for storage.</p>
+    }
+    else
+    {
+        <p>This will delete device history, logs and solar usage data.</p>
+    }
+    
+    <ProcessButton ButtonLabel="Purge all data" OnClick="RunPurge" />
+</div>
+
+@code {
+    
+    private async Task RunPurge()
+    {
+        await Service.PurgeData();
+    }
+
+    private async Task RunResetAccount()
+    {
+        await Service.ResetSettings();
+    }
+}

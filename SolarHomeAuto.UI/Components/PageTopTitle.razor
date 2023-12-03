@@ -1,0 +1,63 @@
+@inject IAuthPageService AuthService
+
+<div class="page-title @(HasLinks ? "with-links" : "")">
+    <h1>@Title</h1>
+
+    @if (HasLinks)
+    {
+        <div class="links">
+            @if (Refresh.HasDelegate)
+            {
+                <span class="loading">
+                    @if (IsRefreshing)
+                    {
+                        <span class="spinner-border text-primary"></span>
+                    }
+                    <a href="#" @onclick=@RunRefresh @onclick:preventDefault=true>Refresh</a>
+                </span>
+            }
+
+            @if (ShowBack)
+            {
+                <a href="/">Back</a>
+            }
+
+            @if (AuthService.AuthEnabled && ShowLogout)
+            {
+                <a href="#" @onclick="Logout" @onclick:preventDefault="true">Logout</a>
+            }
+        </div>
+    }
+</div>
+
+@code{
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public bool ShowBack { get; set; } = true;
+
+    [Parameter]
+    public bool ShowLogout { get; set; } = true;
+
+    [Parameter]
+    public EventCallback Refresh { get; set; }
+
+    private bool IsRefreshing { get; set; }
+
+    private bool HasLinks => ShowBack || Refresh.HasDelegate || (AuthService.AuthEnabled && ShowLogout);
+
+    private async Task RunRefresh()
+    {
+        IsRefreshing = true;
+
+        await Refresh.InvokeAsync();
+
+        IsRefreshing = false;
+    }
+
+    private Task Logout()
+    {
+        return AuthService.Logout();
+    }
+}

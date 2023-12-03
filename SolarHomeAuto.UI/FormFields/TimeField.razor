@@ -1,0 +1,50 @@
+﻿@using System.Linq.Expressions
+@using System.Globalization;
+
+@inherits InputBase<TimeSpan>
+
+<div class="form-field @CssClass">
+    @if (!string.IsNullOrWhiteSpace(Label))
+    {
+        <label class="form-label" for="@Id">@Label</label>
+    }
+    <input class="form-control" id="@Id" @bind="@ConvertedValue" type="time" />
+    @if (!string.IsNullOrWhiteSpace(Help))
+    {
+        <div class="help">
+            @Help
+        </div>
+    }
+
+    <div class="form-control-validation">
+        <ValidationMessage For="@ValidationFor" />
+    </div>
+</div>
+
+@code {
+
+    [Parameter, EditorRequired] public Expression<Func<TimeSpan>> ValidationFor { get; set; } = default;
+    [Parameter] public string Id { get; set; }
+    [Parameter] public string Label { get; set; }
+    [Parameter] public string Help { get; set; }
+    
+    private TimeOnly ConvertedValue
+    {
+        get => TimeOnly.FromTimeSpan(CurrentValue);
+        set => CurrentValue = value.ToTimeSpan();
+    }
+
+    protected override bool TryParseValueFromString(string value, out TimeSpan result, out string validationErrorMessage)
+    {
+        if (TimeSpan.TryParseExact(value, "hh\\:mm", CultureInfo.CurrentCulture, out var converted))
+        {
+            result = converted;
+            validationErrorMessage = null;
+            return true;
+        }
+
+        result = default;
+        validationErrorMessage = "Invalid time";
+        return false;
+    }
+}

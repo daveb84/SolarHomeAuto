@@ -1,0 +1,68 @@
+﻿@typeparam T where T : struct, Enum
+@inherits InputBase<T>
+
+@using System.Linq
+@using System.Linq.Expressions
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations;
+
+<div class="form-field @CssClass">
+    @if (!string.IsNullOrWhiteSpace(Label))
+    {
+        <label class="form-label" for="@Id">@Label</label>
+    }
+
+    <select class="form-select" id="@Id" @bind="@CurrentValue">
+        @foreach (var (value, text) in GetOptions())
+        {
+            <option value="@value">@text</option>
+        }
+    </select>
+
+    @if (!string.IsNullOrWhiteSpace(Help))
+    {
+        <div class="help">
+            @Help
+        </div>
+    }
+
+    <div class="form-control-validation">
+        <ValidationMessage For="@ValidationFor" />
+    </div>
+</div>
+
+@code {
+
+    [Parameter, EditorRequired] public Expression<Func<T>> ValidationFor { get; set; } = default;
+    [Parameter] public string Id { get; set; }
+    [Parameter] public string Label { get; set; }
+    [Parameter] public string Help { get; set; }
+
+    private IEnumerable<(T, string)> GetOptions()
+    {
+        foreach (var option in Enum.GetValues(typeof(T)).Cast<T>())
+        {
+            var val = option;
+
+            var displayName = typeof(T)
+                .GetField(option.ToString())
+                .GetCustomAttribute<DisplayAttribute>()?.Name ?? option.ToString();
+
+            yield return (option, displayName);
+        }
+    }
+
+    protected override bool TryParseValueFromString(string value, out T result, out string validationErrorMessage)
+    {
+        if (Enum.TryParse<T>(value, false, out var converted))
+        {
+            result = (T)converted;
+            validationErrorMessage = null;
+            return true;
+        }
+
+        result = default;
+        validationErrorMessage = "Invalid option";
+        return false;
+    }
+}

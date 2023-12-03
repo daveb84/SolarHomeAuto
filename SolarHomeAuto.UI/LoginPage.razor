@@ -1,0 +1,57 @@
+@using System.ComponentModel.DataAnnotations;
+@inject IAuthPageService Service
+@inject NavigationManager NavigationManager
+
+<PageTopTitle Title="Login" ShowBack="false" ShowLogout="false"></PageTopTitle>
+
+<EditForm Model="@model" OnValidSubmit="HandleSubmit">
+    <CustomValidation @ref="customValidation" />
+    <DataAnnotationsValidator />
+    <PasswordField Label="Password" @bind-Value="model.Password" ValidationFor="@(() => model.Password)" Id="Password" />
+
+    <div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+</EditForm>
+
+@code
+{
+    class LoginModel
+    {
+        [Required(ErrorMessage = "Please enter a password")]
+        public string Password { get; set; }
+    }
+
+    private LoginModel model = new LoginModel();
+
+    private CustomValidation customValidation;
+    private EditContext editContext;
+
+    private async Task HandleSubmit()
+    {
+        customValidation?.ClearErrors();
+
+        if (editContext.Validate())
+        {
+            var result = await Service.Authenticate(new Domain.Auth.Models.AuthenticateModel
+            {
+                Password = model.Password
+            });
+
+            if (!result)
+            {
+                var errors = new Dictionary<string, List<string>>();
+
+                errors.Add(nameof(model.Password), new() { "Invalid password" });
+
+                customValidation.DisplayErrors(errors);
+            }
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(model);
+    }
+
+}

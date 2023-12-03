@@ -1,0 +1,49 @@
+@using System.ComponentModel.DataAnnotations;
+@using SolarHomeAuto.Domain.Monitoring;
+@using SolarHomeAuto.Domain.ServerApi.Models;
+@inject IMonitoringPageService Service
+
+<EditForm Model="@model" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <EnumField Label="Monitoring service mode" @bind-Value="model.Mode" ValidationFor="@(() => model.Mode)" Id="Mode" />
+    <BoolField Label="Is on home network" @bind-Value="model.HasLanAccess" ValidationFor="@(() => model.HasLanAccess)" Id="LanAccess" />
+    <ProcessButton ButtonLabel="Save" @ref="submitButton" OnFormSubmit="Submit" />
+</EditForm>
+
+@code
+{
+    private FormModel model = new FormModel();
+
+    private ProcessButton submitButton;
+
+    private async Task HandleSubmit()
+    {
+        await submitButton.RunSubmitForm();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var data = await Service.GetEnvironment();
+
+        model.Mode = data.Mode;
+        model.HasLanAccess = data.HasLanAccess;
+    }
+
+    private async Task Submit()
+    {
+        var data = new MonitoringEnvironment
+        {
+            HasLanAccess = model.HasLanAccess,
+            Mode = model.Mode
+        };
+
+        await Service.UpdateEnvironment(data);
+    }
+
+    class FormModel
+    {
+        public MonitoringServiceMode Mode { get; set; }
+
+        public bool HasLanAccess { get; set; }
+    }
+}

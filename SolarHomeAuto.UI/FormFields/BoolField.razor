@@ -1,0 +1,37 @@
+﻿@using System.Linq.Expressions
+
+@inherits InputBase<bool>
+
+<div class="form-field @CssClass">
+
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="@Id" @bind="@CurrentValue">
+        <label class="form-check-label" for="@Id">@Label</label>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Help))
+    {
+        <div class="help">
+            @Help
+        </div>
+    }
+
+    <div class="form-control-validation">
+        <ValidationMessage For="@ValidationFor" />
+    </div>
+</div>
+
+@code {
+
+    [Parameter, EditorRequired] public Expression<Func<bool>> ValidationFor { get; set; } = default;
+    [Parameter] public string Id { get; set; }
+    [Parameter] public string Label { get; set; }
+    [Parameter] public string Help { get; set; }
+
+    protected override bool TryParseValueFromString(string value, out bool result, out string validationErrorMessage)
+    {
+        result = bool.TryParse(value, out var converted) ? converted : false;
+        validationErrorMessage = null;
+        return true;
+    }
+}

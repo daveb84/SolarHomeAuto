@@ -1,0 +1,77 @@
+﻿@using SolarHomeAuto.Domain;
+<div class="process-button">
+    @if (OnClick.HasDelegate)
+    {
+        <button class="btn btn-primary" @onclick="RunOnClick" disabled=@IsRunning>@ButtonLabel</button>
+    }
+    else
+    {
+        <button class="btn btn-primary" type="submit" disabled=@IsRunning>@ButtonLabel</button>
+    }
+
+    @if (!String.IsNullOrEmpty(CompleteMessage))
+    {
+        <span class="text-muted">@CompleteMessage</span>
+    }
+    else if (IsRunning)
+    {
+        <span class="processing">
+            <span class="spinner-border text-primary"></span>
+            <span class="text-muted">In progress... please wait</span>
+        </span>
+    }
+    
+</div>
+
+@code {
+    [Parameter] 
+    public string ButtonLabel { get; set; }
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    [Parameter]
+    public EventCallback OnFormSubmit { get; set; }
+
+    public string CompleteMessage { get; set; }
+
+    private bool IsRunning { get; set; } = false;
+
+    [Parameter] 
+    public bool ForceIsRunning { get; set; }
+
+    private async Task RunOnClick()
+    {
+        await RunProcess(OnClick);
+    }
+
+    private async Task RunProcess(EventCallback process)
+    {
+        IsRunning = true;
+        var start = DateTimeNow.UtcNow;
+
+        CompleteMessage = null;
+
+        try
+        {
+            await process.InvokeAsync();
+
+            var complete = DateTimeNow.UtcNow;
+            CompleteMessage = $"Completed. Took {(complete - start).TotalMilliseconds} ms";
+        }
+        catch (Exception ex)
+        {
+            var complete = DateTimeNow.UtcNow;
+            CompleteMessage = $"Failed: {ex.Message}. Took {(complete - start).TotalMilliseconds} ms";
+        }
+        finally
+        {
+            IsRunning = false;
+        }
+    }
+
+    public async Task RunSubmitForm()
+    {
+        await RunProcess(OnFormSubmit);
+    }
+}

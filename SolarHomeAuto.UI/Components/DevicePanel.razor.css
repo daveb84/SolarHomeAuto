@@ -1,0 +1,28 @@
+﻿.device-panel {
+    width: 100%;
+    margin-bottom: 24px;
+}
+    .device-panel .title {
+        display:flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+        .device-panel .title .links {
+            display: flex;
+            align-items: flex-start;
+            column-gap: 12px;
+        }
+
+    .device-panel h1 {
+        font-size: 100%;
+    }
+
+    .device-panel > .history {
+        grid-area: history;
+        text-align: right;
+        border-bottom: 1px dashed #ccc;
+    }
+
+    .device-panel > div {
+        grid-area: options;
+    }

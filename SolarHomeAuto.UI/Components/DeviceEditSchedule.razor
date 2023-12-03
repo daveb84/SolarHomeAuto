@@ -1,0 +1,43 @@
+﻿@using SolarHomeAuto.Domain.Account.Models;
+@using SolarHomeAuto.Domain.Devices.Models;
+@using SolarHomeAuto.Domain.SolarExcess;
+@using SolarHomeAuto.UI.Models;
+
+<div class="section">
+    <div class="title">
+        <h2>Schedule @(Model.Index + 1)</h2>
+        <div class="links">
+            <a href="#" @onclick="Model.Remove" @onclick:preventDefault="true">Remove</a>
+        </div>
+    </div>
+
+
+    <div class="schedule-fields">
+        <TimeField Id=@($"Time{Model.Index}") @bind-Value="Model.Time" ValidationFor="@(() => Model.Time)" Label="Time of day" />
+        <EnumField Id=@($"Action{Model.Index}") @bind-Value="Model.Action" ValidationFor="@(() => Model.Action)" Label="Perform action" />
+        <IntField Id=@($"DeviceOrder{Model.Index}") @bind-Value="Model.DeviceOrder" ValidationFor="@(() => Model.DeviceOrder)" Label="Processing order" Help="Relative to other devices being processed simultaneously." />
+        <IntField Id=@($"Delay{Model.Index}") @bind-Value="Model.DelaySeconds" ValidationFor="@(() => Model.DelaySeconds)" Label="Post turn on/off delay" Help="Duration in seconds other devices should wait after this device has been turned on/off" />
+    </div>
+
+    @if (Model.ShowConditions)
+    {
+        <JsonField Id=@($"TurnOnCondition{Model.Index}") @bind-Value="Model.TurnOnCondition" ValidationFor="@(() => Model.TurnOnCondition)" Label="Turn on condition" Size="small" />
+        <JsonField Id=@($"TurnOffCondition{Model.Index}") @bind-Value="Model.TurnOffCondition" ValidationFor="@(() => Model.TurnOffCondition)" Label="Turn off condition" Size="small" Help=@ConditionHelpText />
+        <IntField Id=@($"ConditionRequiredDeviceHistorySeconds{Model.Index}") @bind-Value="Model.ConditionRequiredDeviceHistorySeconds" ValidationFor="@(() => Model.ConditionRequiredDeviceHistorySeconds)" Label="Required history duration (seconds)" />
+    }
+</div>
+
+@code {
+    [Parameter]
+    public DeviceEditScheduleModel Model { get; set; }
+
+    public string ConditionHelpText
+    {
+        get
+        {
+            var propertyNames = typeof(DeviceAndSolarHistory).GetProperties().Select(x => x.Name).Where(x => x != "Date");
+
+            return $"Available property names: {string.Join(", ", propertyNames.ToArray())}";
+        }
+    }
+}

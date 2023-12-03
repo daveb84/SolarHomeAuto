@@ -1,0 +1,43 @@
+﻿@using SolarHomeAuto.UI.Models;
+
+<ul class="pagination justify-content-center">
+    <li class="page-item @(!State.HasPrevious ? "disabled" : "")">
+        <button class="page-link" href="javascript:void(0)" @onclick="() => ChangePage(false)">
+            <span aria-hidden="true">&laquo;</span>
+            Previous
+        </button>
+    </li>
+    <li class="page-item disabled">
+        <span class="page-link">
+            Showing @RecordsDisplayName @State.ShowingFrom to @State.ShowingTo
+        </span>
+    </li>
+    <li class="page-item @(!State.HasNext ? "disabled" : "")">
+        <button class="page-link" @onclick="() => ChangePage(true)">
+            Next
+            <span aria-hidden="true">&raquo;</span>
+        </button>
+    </li>
+</ul>
+
+@code
+{
+    [Parameter]
+    public string RecordsDisplayName { get; set; } = "items";
+
+    [Parameter]
+    public PagerState State { get; set; }
+
+    [Parameter]
+    public EventCallback<PagerFetchParams> OnPage { get; set; }
+
+    protected async Task ChangePage(bool next)
+    {
+        if (next && !State.HasNext) return;
+        if (!next && !State.HasPrevious) return;
+
+        var fetch = next ? State.NextPage() : State.PreviousPage();
+
+        await OnPage.InvokeAsync(fetch);
+    }
+}

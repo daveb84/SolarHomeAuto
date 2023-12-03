@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SolarHomeAuto.UI.Services\SolarHomeAuto.UI.Services.csproj" />
+    <ProjectReference Include="..\SolarHomeAuto.Domain\SolarHomeAuto.Domain.csproj" />
+    <ProjectReference Include="..\SolarHomeAuto.Infrastructure.Auth\SolarHomeAuto.Infrastructure.Auth.csproj" />
+    <ProjectReference Include="..\SolarHomeAuto.WebServer.ClientApp\SolarHomeAuto.WebServer.ClientApp.csproj" />
+    <ProjectReference Include="..\SolarHomeAuto.AppInit.WebServer\SolarHomeAuto.AppInit.WebServer.csproj" />
+  </ItemGroup>
+
+</Project>

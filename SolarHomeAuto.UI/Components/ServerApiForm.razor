@@ -1,0 +1,33 @@
+@using System.ComponentModel.DataAnnotations;
+@using SolarHomeAuto.Domain.ServerApi.Models;
+@inject IAccountPageService Service
+@inject NavigationManager NavigationManager
+
+<EditForm Model="@model" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <TextField Label="Server API URL" @bind-Value="model.BaseUrl" ValidationFor="@(() => model.BaseUrl)" Id="BaseUrl" />
+    <TextField Label="API Key" @bind-Value="model.ApiKey" ValidationFor="@(() => model.ApiKey)" Id="ApiKey" />
+    <ProcessButton ButtonLabel="Save" @ref="submitButton" OnFormSubmit="Submit" />
+</EditForm>
+
+@code
+{
+    private ServerApiAccount model = new ServerApiAccount();
+
+    private ProcessButton submitButton;
+
+    private async Task HandleSubmit()
+    {
+        await submitButton.RunSubmitForm();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        model = await Service.GetServerApiAccount() ?? new ServerApiAccount();
+    }
+
+    private async Task Submit()
+    {
+        await Service.SaveServerApiAccount(model);
+    }
+}

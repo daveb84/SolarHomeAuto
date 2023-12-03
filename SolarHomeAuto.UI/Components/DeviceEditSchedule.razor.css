@@ -1,0 +1,24 @@
+.schedule-fields {
+    display:flex;
+    flex-wrap:wrap;
+    column-gap:20px;
+}
+
+.schedule-fields > ::deep .form-field {
+    flex:1;
+}
+
+.schedule-fields > ::deep .form-field:nth-child(1) {
+    flex: 0 0 100px;
+}
+.schedule-fields > ::deep .form-field:nth-child(2) {
+    flex: 0 0 150px;
+}
+    .schedule-fields > ::deep .form-field:nth-child(3),
+    .schedule-fields > ::deep .form-field:nth-child(4) {
+        flex: 0 0 300px;
+    }
+
+    .schedule-fields ::deep .form-field input:not([type=checkbox]), .schedule-fields ::deep .form-field select {
+        min-width: 100px;
+    }

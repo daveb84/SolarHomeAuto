@@ -1,0 +1,86 @@
+﻿@using System.ComponentModel.DataAnnotations;
+@using Newtonsoft.Json;
+@using SolarHomeAuto.Domain.Account.Models;
+@using SolarHomeAuto.Domain.ServerApi.Models;
+@using SolarHomeAuto.Domain.SolarUsage.Models;
+@inject IAccountPageService Service
+@inject NavigationManager NavigationManager
+
+<EditForm Model="@model" OnValidSubmit="HandleSubmit">
+    <CustomValidation @ref="customValidation" />
+    <DataAnnotationsValidator />
+    <JsonField Label="Solar data import schedule" @bind-Value="model.SolarSchedules" ValidationFor="@(() => model.SolarSchedules)" Id="SolarSchedules" />
+    <ProcessButton ButtonLabel="Save" @ref="submitButton" OnFormSubmit="Submit" />
+</EditForm>
+
+@code
+{
+    private AccountModel model = new AccountModel();
+
+    private List<SolarRealTimeSchedulePeriod> solarSchedules;
+
+    private ProcessButton submitButton;
+
+    private CustomValidation customValidation;
+    private EditContext editContext;
+
+    private async Task HandleSubmit()
+    {
+        customValidation?.ClearErrors();
+
+        if (editContext.Validate())
+        {
+            var errors = new Dictionary<string, List<string>>();
+
+            if (!TrySerialize<List<SolarRealTimeSchedulePeriod>>(model.SolarSchedules, out solarSchedules))
+            {
+                errors.Add(nameof(model.SolarSchedules), new() { "Invalid format" });
+            }
+
+            if (errors.Any())
+            {
+                customValidation.DisplayErrors(errors);
+            }
+            else
+            {
+                await submitButton.RunSubmitForm();
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        editContext = new EditContext(model);
+
+        var data = await Service.GetSolarRealTimeImportSchedule();
+
+        model = new AccountModel
+        {
+            SolarSchedules = JsonConvert.SerializeObject(data, Formatting.Indented)
+        };
+    }
+
+    private async Task Submit()
+    {
+        await Service.SaveSolarRealTimeImportSchedule(solarSchedules);
+    }
+
+    private bool TrySerialize<T>(string json, out T data)
+    {
+        try
+        {
+            data = JsonConvert.DeserializeObject<T>(json);
+            return true;
+        }
+        catch
+        {
+            data = default;
+            return false;
+        }
+    }
+
+    class AccountModel
+    {
+        public string SolarSchedules { get; set; }
+    }
+}

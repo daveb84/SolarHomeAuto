@@ -1,0 +1,32 @@
+﻿.page-title {
+    border-bottom: 1px dotted #ccc;
+    margin-bottom: 12px;
+}
+
+.page-title h1 {
+    font-size: 120%;
+    text-align: center;
+}
+
+
+.page-title.with-links {
+    display: flex;
+    justify-content: space-between;
+    align-items:center;
+}
+.links {
+    display: flex;
+    column-gap: 12px;
+}
+
+.links .loading {
+    display: flex;
+    align-items: center;
+}
+
+.links .loading .spinner-border {
+    width: 15px;
+    height: 15px;
+    margin-right: 4px;
+    font-size: 0.5em;
+}

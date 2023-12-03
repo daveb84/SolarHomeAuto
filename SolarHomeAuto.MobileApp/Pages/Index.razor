@@ -1,0 +1,37 @@
+﻿@page "/"
+@using SolarHomeAuto.Infrastructure.DataStore.Entities;
+
+<ServicePage />
+
+@if (ShowFiles)
+{
+    foreach (var file in Files)
+    {
+        <table class="table table-fixed">
+            <tr class="table-active">
+                <th>File name</th>
+                <td>@file</td>
+            </tr>
+        </table>
+    }
+}
+
+@code
+{
+    private bool ShowFiles { get; set; }
+    private string Linked => typeof(Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions).Name;
+
+    private List<string> Files { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        TestLogging();
+
+        return Task.CompletedTask;
+    }
+
+    private void TestLogging()
+    {
+        Files = Directory.GetFiles(FileSystem.AppDataDirectory).ToList();
+    }
+}

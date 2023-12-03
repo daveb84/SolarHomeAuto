@@ -1,0 +1,8 @@
+textarea.form-control {
+    font-family:Courier New, Courier, monospace;
+    height: 20em;
+}
+
+.small textarea.form-control {
+    height: 5em;
+}

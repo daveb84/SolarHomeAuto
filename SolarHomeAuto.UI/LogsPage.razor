@@ -1,0 +1,109 @@
+﻿@using SolarHomeAuto.Domain
+@using SolarHomeAuto.Domain.Devices.Schedule;
+@using SolarHomeAuto.Domain.Logging.Models;
+@using SolarHomeAuto.Domain.ScheduledJobs;
+@using SolarHomeAuto.Domain.SolarExcess;
+@using SolarHomeAuto.UI.Models;
+@using SolarHomeAuto.Domain.Monitoring;
+
+@inject IDataPageService Service
+
+<PageTopTitle Title="Logs"></PageTopTitle>
+
+<div class="logs-results">
+    <Switch Checked=@MonitoringOnly OnChange="MonitoringOnlyToggle" Label="Include solar monitoring only" />
+
+@if (!LogEntries.Any())
+{
+    <p class="text-center">
+        There are no log entries to show.
+    </p>
+}
+else
+{
+    <Pager OnPage="FetchPage" State="Pager" RecordsDisplayName="log entries"></Pager>
+
+        @foreach (var message in LogEntries)
+        {
+            <table class="table table-fixed logs-table">
+                <tbody>
+                    <tr class="table-active">
+                        <th>Date</th>
+                        <td>@message.Date.UtcToLocalLong()</td>
+                    </tr>
+                    @if (!string.IsNullOrWhiteSpace(message.IpAddress))
+                    {
+                        <tr>
+                            <th>IP Address</th>
+                            <td>@message.IpAddress</td>
+                        </tr>
+                    }
+                    <tr>
+                        <th>Level</th>
+                        <td>@message.Level</td>
+                    </tr>
+                    <tr>
+                        <th>Logger</th>
+                        <td>@message.Logger</td>
+                    </tr>
+                    <tr>
+                        <th>Message</th>
+                        <td>@message.Message</td>
+                    </tr>
+                    @if (!string.IsNullOrWhiteSpace(message.Exception))
+                    {
+                        <tr>
+                            <th>Exception</th>
+                            <td>@message.Exception</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        <Pager OnPage="FetchPage" State="Pager" RecordsDisplayName="log entries"></Pager>
+}
+</div>
+@code {
+    private List<LogEntry> LogEntries { get; set; } = new List<LogEntry>();
+
+    private bool MonitoringOnly { get; set; } = true;
+
+    private async Task MonitoringOnlyToggle(bool selected)
+    {
+        MonitoringOnly = selected;
+
+        await Refresh();
+    }
+
+    private PagerState Pager { get; set; } = new PagerState();
+
+    private async Task FetchPage(PagerFetchParams fetch)
+    {
+        var filter = new LogFilter
+        {
+            NewestFirst = true,
+            Skip = fetch.Skip,
+            Take = fetch.Take
+        };
+
+        if (MonitoringOnly)
+        {
+            filter.Sources.AddRange(MonitoringWorker.MonitoringLoggerNames);
+        }
+
+        LogEntries = await Service.GetLogs(filter);
+
+        Pager.Update(fetch, LogEntries.Count);
+    }
+
+    private Task Refresh()
+    {
+        return FetchPage(new PagerFetchParams());
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        return Refresh();
+    }
+}

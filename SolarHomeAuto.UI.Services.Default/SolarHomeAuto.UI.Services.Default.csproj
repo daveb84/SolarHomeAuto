@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SolarHomeAuto.UI.Services\SolarHomeAuto.UI.Services.csproj" />
+    <ProjectReference Include="..\SolarHomeAuto.Domain\SolarHomeAuto.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

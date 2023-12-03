@@ -1,0 +1,102 @@
+﻿@using SolarHomeAuto.Domain.Devices.Models
+@using SolarHomeAuto.Domain.Devices;
+@using SolarHomeAuto.Domain.Devices.Types;
+@using SolarHomeAuto.Domain.MobileApp
+@using SolarHomeAuto.Domain;
+@inject IDevicePageService Service
+
+@if (Device != null)
+{
+    <article class="device-panel">
+        <div class="title">
+            <h1>@Device.Name</h1>
+            <div class="links">
+                <a href="/deviceedit/@Device.DeviceId">Edit</a>
+                <a href="/devicehistory/@Device.DeviceId">History</a>
+            </div>
+        </div>
+        
+        <div class="options">
+            <Switch Id=@EnabledControlId Checked=@Enabled OnChange=Enable Label=@EnabledLabel />
+            <Switch Id=@SwitchControlId Checked=@SwitchOn OnChange=Switch Label=@SwitchLabel Disabled=@SwitchDisabled />
+        </div>
+    </article>
+}
+
+@code {
+
+    [Parameter]
+    public Device Device { get; set; }
+
+    [Parameter]
+    public List<DevicePanel> ParentCollection { get; set; }
+
+    public SwitchStatus Status { get; set; }
+
+    public bool SwitchOn => Status == SwitchStatus.On;
+
+    public bool SwitchDisabled => Status == SwitchStatus.Offline;
+
+    public string SwitchLabel
+    {
+        get
+        {
+            return Status switch
+            {
+                SwitchStatus.On => "Turned on",
+                SwitchStatus.Off => "Turned off",
+                _ => "Device is offline",
+            };
+        }
+    }
+
+    public string SwitchControlId => $"switch-{Device?.DeviceId}";
+
+    private async Task Switch(bool on)
+    {
+        var action = on ? SwitchAction.TurnOn : SwitchAction.TurnOff;
+
+        await Service.SwitchDevice(Device.DeviceId, action);
+        await Refresh();
+    }
+
+    public bool Enabled { get; set; }
+
+    public string EnabledControlId => $"enable-{Device?.DeviceId}";
+
+    public string EnabledLabel => Enabled ? "Enabled for solar monitoring" : "Disabled for solar monitoring";
+
+    private async Task Enable(bool enable)
+    {
+        await Service.EnableDevice(new EnableDeviceRequest { DeviceId = Device.DeviceId, Enable = enable });
+
+        await Refresh(false, true);
+    }
+
+    public async Task Refresh(bool status = true, bool enabled = true)
+    {
+        if (string.IsNullOrWhiteSpace(Device?.DeviceId)) return;
+
+        if (status)
+        {
+            Status = await Service.GetDeviceStatus(Device.DeviceId);
+        }
+
+        if (enabled)
+        {
+            Enabled = await Service.IsDeviceEnabled(Device.DeviceId);
+        }
+
+        this.StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Refresh();
+
+        if (ParentCollection != null)
+        {
+            ParentCollection.Add(this);
+        }
+    }
+}
